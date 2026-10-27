@@ -1,0 +1,7 @@
+
+.git/
+.github/
+terraform/.terraform/
+terraform/terraform.tfstate*
+*.tfvars
+.env

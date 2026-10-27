@@ -1,0 +1,13 @@
+target/
+.idea/
+.vscode/
+*.iml
+.env
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+terraform/crash.log
+*.tfstate
+*.tfstate.*
+terraform/crash.*.log

@@ -1,0 +1,6 @@
+aws_region       = "ap-south-1"
+instance_type    = "t3.micro"
+min_size         = 2
+max_size         = 3
+desired_capacity = 2
+container_image = "docker.io/YOUR_DOCKERHUB_USERNAME/cloudpulse:1.0.0"\n
