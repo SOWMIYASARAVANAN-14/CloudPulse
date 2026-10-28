@@ -36,9 +36,9 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = { Name = "${var.project_name}-alb-sg" }
@@ -54,9 +54,9 @@ resource "aws_security_group" "app" {
     security_groups = [aws_security_group.alb.id]
   }
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = { Name = "${var.project_name}-app-sg" }
@@ -67,7 +67,7 @@ resource "aws_lb" "app" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = data.aws_subnets.default.ids
-  tags = { Project = var.project_name }
+  tags               = { Project = var.project_name }
 }
 resource "aws_lb_target_group" "app" {
   name     = "${var.project_name}-tg"
@@ -96,9 +96,9 @@ resource "aws_lb_listener" "http" {
   }
 }
 resource "aws_launch_template" "app" {
-  name_prefix   = "${var.project_name}-"
-  image_id      = data.aws_ami.al2023.id
-  instance_type = var.instance_type
+  name_prefix            = "${var.project_name}-"
+  image_id               = data.aws_ami.al2023.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.app.id]
   user_data = base64encode(<<-EOF
     #!/bin/bash
@@ -112,17 +112,17 @@ resource "aws_launch_template" "app" {
   )
   tag_specifications {
     resource_type = "instance"
-    tags = { Name = "${var.project_name}-instance", Project = var.project_name }
+    tags          = { Name = "${var.project_name}-instance", Project = var.project_name }
   }
   lifecycle { create_before_destroy = true }
 }
 resource "aws_autoscaling_group" "app" {
-  name                = "${var.project_name}-asg"
-  min_size            = var.min_size
-  max_size            = var.max_size
-  desired_capacity    = var.desired_capacity
-  vpc_zone_identifier = data.aws_subnets.default.ids
-  target_group_arns   = [aws_lb_target_group.app.arn]
+  name                      = "${var.project_name}-asg"
+  min_size                  = var.min_size
+  max_size                  = var.max_size
+  desired_capacity          = var.desired_capacity
+  vpc_zone_identifier       = data.aws_subnets.default.ids
+  target_group_arns         = [aws_lb_target_group.app.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
   launch_template {

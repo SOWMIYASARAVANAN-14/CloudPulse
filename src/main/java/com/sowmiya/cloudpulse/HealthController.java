@@ -18,6 +18,7 @@ public class HealthController {
         return Map.of(
             "status", "UP",
             "service", "CloudPulse",
+            "version", "1.1.0",
             "instance", instance,
             "timestamp", Instant.now().toString()
         );
@@ -28,8 +29,8 @@ public class HealthController {
         return Map.of(
             "name", "CloudPulse",
             "description", "Self-healing cloud application demo",
-            "version", "1.0.0",
-            "features", new String[]{"health checks", "container deployment", "cloud autoscaling"}
+            "version", "1.1.0",
+            "features", new String[]{"health checks", "container deployment", "cloud autoscaling", "automated-cd"}
         );
     }
 }

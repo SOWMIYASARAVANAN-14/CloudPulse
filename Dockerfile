@@ -17,7 +17,7 @@ WORKDIR /app
 RUN useradd --system --uid 10001 --create-home appuser
 
 COPY --from=build --chown=appuser:appuser \
-    /build/target/cloudpulse-1.0.0.jar app.jar
+    /build/target/*.jar /app/app.jar
 
 USER 10001
 

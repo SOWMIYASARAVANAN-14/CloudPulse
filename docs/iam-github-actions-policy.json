@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAutoScalingRefresh",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:StartInstanceRefresh",
+        "autoscaling:DescribeInstanceRefreshes",
+        "autoscaling:DescribeAutoScalingGroups"
+      ],
+      "Resource": "arn:aws:autoscaling:ap-south-1:241490787841:autoScalingGroup:*:autoScalingGroupName/cloudpulse-asg"
+    },
+    {
+      "Sid": "AllowLoadBalancerDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeTargetHealth"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
