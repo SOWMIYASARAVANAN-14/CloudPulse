@@ -125,6 +125,7 @@ resource "aws_autoscaling_group" "app" {
   target_group_arns         = [aws_lb_target_group.app.arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
+  default_cooldown          = 180
   launch_template {
     id      = aws_launch_template.app.id
     version = "$Latest"
@@ -135,13 +136,28 @@ resource "aws_autoscaling_group" "app" {
     propagate_at_launch = true
   }
 }
+
+resource "aws_autoscaling_policy" "cpu_target_tracking" {
+  name                      = "${var.project_name}-cpu-target-tracking"
+  policy_type               = "TargetTrackingScaling"
+  autoscaling_group_name    = aws_autoscaling_group.app.name
+  estimated_instance_warmup = 180
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 50.0
+  }
+}
+
 resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   alarm_name          = "${var.project_name}-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = 120
+  period              = 60
   statistic           = "Average"
   threshold           = 70
   alarm_description   = "Average EC2 CPU is above 70 percent"
