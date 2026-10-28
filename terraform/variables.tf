@@ -29,3 +29,9 @@ variable "container_image" {
   description = "Public container image URI, for example docker.io/yourname/cloudpulse:1.0.0"
   type        = string
 }
+
+variable "alert_email" {
+  description = "Email address to receive CloudPulse alerts"
+  type        = string
+  default     = "sowmiyasaravanan3014@gmail.com"
+}

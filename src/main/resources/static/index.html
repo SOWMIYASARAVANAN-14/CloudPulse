@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPulse — Self-Healing Cloud Application Platform</title>
+  <meta name="description" content="Production-ready cloud microservice platform on AWS with CloudFront, ALB, Auto Scaling, and Docker.">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #34d399;
+      --accent-indigo: #818cf8;
+      --accent-amber: #fbbf24;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b, var(--bg-primary) 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    /* Navbar */
+    header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .nav-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-emerald);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 64px 0 40px;
+      text-align: center;
+    }
+
+    .hero-tagline {
+      display: inline-block;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 32px;
+    }
+
+    /* Telemetry Ribbon */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .telemetry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      text-align: left;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .telemetry-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .telemetry-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .telemetry-value.accent {
+      color: var(--accent-cyan);
+    }
+
+    /* Architecture Grid */
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      width: 4px;
+      height: 22px;
+      background: var(--accent-cyan);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .architecture-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 56px;
+    }
+
+    .arch-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .arch-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .arch-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--accent-cyan);
+    }
+
+    .arch-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .arch-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Endpoints & Explorer */
+    .explorer-panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 60px;
+      box-shadow: var(--shadow);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent-cyan);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: #7dd3fc;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #64748b;
+    }
+
+    .code-console {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      max-height: 260px;
+    }
+
+    .code-console pre {
+      margin: 0;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 24px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.1rem; }
+      .telemetry-grid { grid-template-columns: 1fr 1fr; }
+      .architecture-grid { grid-template-columns: 1fr; }
+      .nav-wrapper { flex-direction: column; height: auto; padding: 14px 0; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container nav-wrapper">
+      <a href="/" class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <span>CloudPulse</span>
+      </a>
+      <div class="status-badge" id="status-badge">
+        <div class="pulse-dot"></div>
+        <span id="system-status-text">SYSTEM ONLINE (UP)</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tagline">Cloud-Native Microservice Platform</div>
+      <h1>Self-Healing Infrastructure & Live Observability</h1>
+      <p>
+        Architected with Java 21 Spring Boot, containerized with Docker, automated via GitHub Actions GitOps CI/CD, and orchestrated across AWS CloudFront, ALB, and EC2 Auto Scaling.
+      </p>
+
+      <!-- Live Telemetry Grid -->
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <div class="telemetry-label">Service Name</div>
+          <div class="telemetry-value" id="val-service">CloudPulse</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="telemetry-label">App Version</div>
+          <div class="telemetry-value accent" id="val-version">1.1.0</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="telemetry-label">Container / Host</div>
+          <div class="telemetry-value" id="val-instance">Fetching...</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="telemetry-label">Runtime Engine</div>
+          <div class="telemetry-value">Java 21 / Spring Boot 3</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture Highlights -->
+    <section>
+      <h2 class="section-title"><span></span>AWS Cloud Architecture Highlights</h2>
+      <div class="architecture-grid">
+        
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+          </div>
+          <h3>Amazon CloudFront CDN</h3>
+          <p>Global edge distribution providing browser-trusted HTTPS termination with HTTP-to-HTTPS redirection and a real-time CachingDisabled (TTL=0) policy.</p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+          </div>
+          <h3>Application Load Balancer</h3>
+          <p>Multi-AZ public ingress distributing HTTP traffic to backend container nodes with 30-second active health checks on <code>/api/health</code>.</p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+          </div>
+          <h3>EC2 Auto Scaling Group</h3>
+          <p>Elastic compute cluster operating Target Tracking scaling to maintain 50% average CPU utilization with automated self-healing instance replacement.</p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <h3>IMDSv2 & Security Hardening</h3>
+          <p>Instance Metadata Service v2 enforced with hop limit 1 to neutralize SSRF risks. Containers run unprivileged with least-privilege IAM policies.</p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          <h3>CloudWatch & SNS Alerting</h3>
+          <p>Proactive CPU utilization alarms (>70%) configured with automated dual-state email notifications dispatching real-time ALARM and OK recovery alerts.</p>
+        </div>
+
+        <div class="arch-card">
+          <div class="arch-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <h3>GitOps CI/CD Pipeline</h3>
+          <p>GitHub Actions automated pipeline executing Maven test verification, multi-tagged Docker image builds, and zero-downtime ASG rolling instance refreshes.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Interactive API Explorer -->
+    <section>
+      <h2 class="section-title"><span></span>Live Endpoint Explorer</h2>
+      <div class="explorer-panel">
+        <p style="margin-bottom: 20px; color: var(--text-muted);">
+          Inspect real-time telemetry from the running Spring Boot service:
+        </p>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="testEndpoint('/api/health')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Query /api/health
+          </button>
+          <button class="btn btn-secondary" onclick="testEndpoint('/api/info')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Query /api/info
+          </button>
+          <a class="btn btn-secondary" href="/api/health" target="_blank" rel="noopener">
+            Open /api/health in New Tab &nearr;
+          </a>
+          <a class="btn btn-secondary" href="/api/info" target="_blank" rel="noopener">
+            Open /api/info in New Tab &nearr;
+          </a>
+        </div>
+
+        <div class="code-console">
+          <pre id="console-output">// Live API response will appear here...</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      CloudPulse &bull; Self-Healing Cloud Application Platform &bull; Built with Spring Boot, Docker, Terraform & AWS.
+    </div>
+  </footer>
+
+  <script>
+    // Initial telemetry fetch
+    async function initTelemetry() {
+      try {
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('val-instance').textContent = data.instance || 'local';
+          document.getElementById('val-version').textContent = data.version || '1.1.0';
+          document.getElementById('val-service').textContent = data.service || 'CloudPulse';
+          document.getElementById('console-output').textContent = JSON.stringify(data, null, 2);
+        } else {
+          document.getElementById('val-instance').textContent = 'active';
+        }
+      } catch (err) {
+        document.getElementById('val-instance').textContent = 'cluster-node';
+      }
+    }
+
+    // Endpoint tester button handler
+    async function testEndpoint(endpoint) {
+      const consoleEl = document.getElementById('console-output');
+      consoleEl.textContent = 'Loading ' + endpoint + ' ...';
+      try {
+        const start = performance.now();
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        const latency = Math.round(performance.now() - start);
+        consoleEl.textContent = '// HTTP ' + res.status + ' OK (' + latency + 'ms)\n' + JSON.stringify(data, null, 2);
+      } catch (err) {
+        consoleEl.textContent = '// Error querying endpoint: ' + err.message;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initTelemetry);
+  </script>
+</body>
+</html>

@@ -110,6 +110,11 @@ resource "aws_launch_template" "app" {
     docker run -d --restart unless-stopped --name cloudpulse -p 8080:8080 ${var.container_image}
   EOF
   )
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
   tag_specifications {
     resource_type = "instance"
     tags          = { Name = "${var.project_name}-instance", Project = var.project_name }
@@ -151,6 +156,17 @@ resource "aws_autoscaling_policy" "cpu_target_tracking" {
   }
 }
 
+resource "aws_sns_topic" "alerts" {
+  name = "${var.project_name}-alerts"
+  tags = { Project = var.project_name }
+}
+
+resource "aws_sns_topic_subscription" "email" {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+}
+
 resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   alarm_name          = "${var.project_name}-high-cpu"
   comparison_operator = "GreaterThanThreshold"
@@ -164,5 +180,48 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   dimensions = {
     AutoScalingGroupName = aws_autoscaling_group.app.name
   }
+  alarm_actions      = [aws_sns_topic.alerts.arn]
+  ok_actions         = [aws_sns_topic.alerts.arn]
   treat_missing_data = "notBreaching"
+}
+
+resource "aws_cloudfront_distribution" "app" {
+  comment         = "CloudPulse HTTPS CDN Distribution"
+  enabled         = true
+  is_ipv6_enabled = true
+  price_class     = "PriceClass_100"
+
+  origin {
+    domain_name = aws_lb.app.dns_name
+    origin_id   = "CloudPulse-ALB-Origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "CloudPulse-ALB-Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = { Project = var.project_name }
 }

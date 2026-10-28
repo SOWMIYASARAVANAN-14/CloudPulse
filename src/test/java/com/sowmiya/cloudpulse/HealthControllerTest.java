@@ -19,6 +19,21 @@ class HealthControllerTest {
     @Autowired MockMvc mvc;
 
     @Test
+    void rootEndpointForwardsToLandingPage() throws Exception {
+        mvc.perform(get("/"))
+            .andExpect(status().isOk())
+            .andExpect(forwardedUrl("index.html"));
+    }
+
+    @Test
+    void indexHtmlReturnsLandingPage() throws Exception {
+        mvc.perform(get("/index.html"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentTypeCompatibleWith(org.springframework.http.MediaType.TEXT_HTML))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("CloudPulse")));
+    }
+
+    @Test
     void healthEndpointReturnsUp() throws Exception {
         mvc.perform(get("/api/health"))
             .andExpect(status().isOk())
